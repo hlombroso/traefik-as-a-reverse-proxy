@@ -1,0 +1,24 @@
+version: "3"
+services:
+  mysql8:
+    image: mysql:8.0
+    container_name: mysql8
+    networks:
+      - $DEFAULT_NETWORK
+      - default
+    volumes:
+      - $DOCKER_VOLUMES_PATH/mysql8/db-data:/var/lib/mysql
+      - $DOCKER_VOLUMES_PATH/mysql8/logs:/var/log/mysql
+      - ./app-configs/mysql8/my.cnf:/etc/mysql/conf.d/my.cnf
+    environment:
+      - MYSQL_DATABASE=${DB_NAME}
+      - MYSQL_USER=${DB_USER}
+      - MYSQL_PASSWORD=${DB_USER_PASS}
+      - MYSQL_ROOT_PASSWORD=${DB_ROOT_PASS}
+      - TZ=${TZ}
+    ports:
+      - ${DB_PORT}:3306
+
+networks:
+  $DEFAULT_NETWORK:
+    external: true
