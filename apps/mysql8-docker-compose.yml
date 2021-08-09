@@ -3,6 +3,7 @@ services:
   mysql8:
     image: mysql:8.0
     container_name: mysql8
+    restart: unless-stopped
     networks:
       - $DEFAULT_NETWORK
       - default

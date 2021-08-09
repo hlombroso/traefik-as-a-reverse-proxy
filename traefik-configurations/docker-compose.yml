@@ -2,7 +2,8 @@ version: "3"
 
 services:
   traefik:
-    image: traefik:latest
+    # image: traefik:latest
+    image: traefik:v2.5
     container_name: traefik
     restart: unless-stopped
     security_opt:
@@ -23,7 +24,7 @@ services:
       - "traefik.enable=true"
       - "traefik.docker.network=$DEFAULT_NETWORK"
       - "traefik.http.routers.traefik-secure.entrypoints=websecure"
-      - "traefik.http.routers.traefik-secure.rule=Host(`traefik.$MY_DOMAIN`)"
+      - "traefik.http.routers.traefik-secure.rule=Host(`ap-kanri.$MY_DOMAIN`)"
       - "traefik.http.routers.traefik-secure.middlewares=user-auth@file"
       - "traefik.http.routers.traefik-secure.service=api@internal"
 
@@ -43,7 +44,7 @@ services:
       - "traefik.enable=true"
       - "traefik.docker.network=$DEFAULT_NETWORK"
       - "traefik.http.routers.portainer-secure.entrypoints=websecure"
-      - "traefik.http.routers.portainer-secure.rule=Host(`portainer.$MY_DOMAIN`)"
+      - "traefik.http.routers.portainer-secure.rule=Host(`dm-kanri.$MY_DOMAIN`)"
       - "traefik.http.routers.portainer-secure.service=portainer"
       - "traefik.http.services.portainer.loadbalancer.server.port=9000"
 

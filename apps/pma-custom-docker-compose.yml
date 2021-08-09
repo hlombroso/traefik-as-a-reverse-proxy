@@ -1,0 +1,33 @@
+version: "3"
+
+services:
+  pma-cust:
+    image: nginx:latest
+    container_name: pma-cust
+    restart: unless-stopped
+    volumes:
+      - ./app-configs/pma-custom/nginx.conf:/etc/nginx/conf.d/default.conf
+      - $DOCKER_VOLUMES_PATH/phpmyadmin/nginx/logs:/var/log/nginx
+      - $PHPMYADMIN_PATH:/app
+    networks:
+      - $DEFAULT_NETWORK
+      - default
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=$DEFAULT_NETWORK"
+      - "traefik.http.routers.pma-cust.entrypoints=websecure"
+      - "traefik.http.routers.pma-cust.rule=Host(`$MY_DOMAIN`) && PathPrefix(`/pma-cust`)"
+      - "traefik.http.routers.pma-cust.middlewares=pma-cust-stripprefix"
+      - "traefik.http.middlewares.pma-cust-stripprefix.stripprefix.prefixes=/pma-cust"
+
+  php73-pma-cust:
+    build:
+      context: .
+      dockerfile: PHP.Dockerfile
+    container_name: php73-pma-cust
+    volumes:
+      - $PHPMYADMIN_PATH:/app
+
+networks:
+  $DEFAULT_NETWORK:
+    external: true

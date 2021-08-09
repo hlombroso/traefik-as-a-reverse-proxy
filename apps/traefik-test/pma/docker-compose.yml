@@ -1,0 +1,76 @@
+version: '3.6'
+
+volumes:
+  wordpress:
+  mysql:
+
+networks:
+  anohou_traefik_net:
+    external: true
+  default:
+    driver: bridge
+
+services:
+  # wordpress:
+  #   container_name: qcj_wordpress
+  #   image: wordpress
+  #   restart: always
+  #   environment:
+  #     WORDPRESS_DB_HOST: qcj_mysql
+  #     WORDPRESS_DB_USER: x
+  #     WORDPRESS_DB_PASSWORD: x
+  #     WORDPRESS_DB_NAME: x
+  #   volumes:
+  #     - wordpress:/var/www/html
+  #   labels:
+  #     - traefik.enable=true
+  #     - traefik.http.routers.qcj-wordpress.rule=Host(`localhost`)
+  #     - traefik.http.services.qcj-wordpress.loadbalancer.server.port=80
+  #     - traefik.http.routers.qcj-wordpress.middlewares=compress
+  #     - traefik.http.routers.qcj-wordpress.tls.certresolver=tlsresolver
+  #   networks:
+  #     - default
+  #     - anohou_traefik_net
+
+  db:
+    container_name: qcj_mysql
+    image: mysql:5.7
+    restart: always
+    environment:
+      MYSQL_DATABASE: x
+      MYSQL_USER: x
+      MYSQL_PASSWORD: x
+      MYSQL_ROOT_PASSWORD: x
+    volumes:
+      - mysql:/var/lib/mysql
+    networks:
+      - default
+      - anohou_traefik_net
+
+  phpmyadmin:
+    container_name: qcj_phpmyadmin
+    image: phpmyadmin:5.0.2
+    restart: always
+    environment:
+      PMA_HOST: qcj_mysql
+      MYSQL_ROOT_PASSWORD: x
+      PMA_ABSOLUTE_URI: https://localhost:8080/phpmyadmin/ # <-- !
+    volumes:
+      - mysql:/var/lib/mysql
+    labels:
+      # Route with Traefik
+      - traefik.enable=true
+      - traefik.docker.network=anohou_traefik_net
+      - traefik.http.routers.qcj-phpmyadmin.rule=Host(`localhost`) && PathPrefix(`/phpmyadmin`) # <-- !
+      - traefik.http.routers.qcj-phpmyadmin.entrypoints=admin
+      - traefik.http.services.qcj-phpmyadmin.loadbalancer.server.port=80
+      # Middleware
+      - traefik.http.middlewares.qcj-phpmyadmin.stripprefix.prefixes=/phpmyadmin
+      - traefik.http.middlewares.qcj-phpmyadmin.stripprefix.forceslash=false
+      - traefik.http.middlewares.proto.headers.customrequestheaders.X-Forwarded-Proto=https # not sure if this was needed
+      - traefik.http.routers.qcj-phpmyadmin.middlewares=qcj-phpmyadmin@docker,compress
+      # TLS
+      - traefik.http.routers.qcj-phpmyadmin.tls.certresolver=tlsresolver
+    networks:
+      - default
+      - anohou_traefik_net

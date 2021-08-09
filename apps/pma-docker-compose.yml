@@ -2,8 +2,9 @@ version: "3"
 
 services:
   phpmyadmin:
-    image: phpmyadmin/phpmyadmin
+    image: phpmyadmin:5.1.1
     container_name: pma
+    restart: unless-stopped
     links:
       - mysql8
     environment:
@@ -12,9 +13,9 @@ services:
       PMA_ARBITRARY: 1
       PMA_USER: root
       PMA_PASSWORD: ${DB_ROOT_PASS}
+      PMA_ABSOLUTE_URI: https://$MY_DOMAIN/dbkanrin/
     volumes:
       - ./app-configs/phpmyadmin/phpmyadmin-misc.ini:/usr/local/etc/php/conf.d/phpmyadmin-misc.ini
-    # restart: always
     # ports:
     #     - 8081:80
     networks:
@@ -24,8 +25,10 @@ services:
       - "traefik.enable=true"
       - "traefik.docker.network=$DEFAULT_NETWORK"
       - "traefik.http.routers.phpmyadmin.entrypoints=websecure"
-      - "traefik.http.routers.phpmyadmin.rule=Host(`pma.$MY_DOMAIN`)"
-      # - "traefik.http.routers.phpmyadmin.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.phpmyadmin.rule=Host(`$MY_DOMAIN`) && PathPrefix(`/dbkanrin`)"
+      # - "traefik.http.routers.phpmyadmin.rule=Host(`$MY_DOMAIN`) && PathPrefix(`/dbkanrin{regex:$$|/.*}`)"
+      - "traefik.http.routers.phpmyadmin.middlewares=pma-stripprefix"
+      - "traefik.http.middlewares.pma-stripprefix.stripprefix.prefixes=/dbkanrin"
 
 networks:
   $DEFAULT_NETWORK:

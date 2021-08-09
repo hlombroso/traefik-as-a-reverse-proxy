@@ -1,0 +1,56 @@
+version: '3.6'
+
+
+
+services:
+  traefik:
+    container_name: traefik
+    restart: always
+    image: 'traefik:v2.3'
+    command: >-
+      --log.level=INFO
+      --api.dashboard=true
+      --providers.docker
+      --providers.docker.exposedByDefault=false
+      --providers.docker.network=anohou_traefik_net
+      --entryPoints.web.address=:80
+      --entrypoints.web.http.redirections.entryPoint.to=websecure
+      --entrypoints.web.http.redirections.entryPoint.scheme=https
+      --entrypoints.websecure.address=:443
+      --entrypoints.admin.address=:8080 # admin port protected by firewall
+      --certificatesresolvers.tlsresolver.acme.email=hlombroso@gmail.com
+      --certificatesresolvers.tlsresolver.acme.storage=acme.json
+      --certificatesresolvers.tlsresolver.acme.tlschallenge=true
+      --certificatesresolvers.tlsresolver.acme.httpchallenge.entrypoint=web
+      --certificatesresolvers.tlsresolver.acme.storage=/etc/traefik/acme/acme.json
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.dashboard.rule=Host(`localhost`)"
+      - "traefik.http.routers.dashboard.entrypoints=websecure"
+      - "traefik.http.routers.dashboard.service=api@internal"
+      - "traefik.http.routers.dashboard.tls.certresolver=tlsresolver"
+      # - "traefik.http.middlewares.traefik-auth.basicauth.users=xxxx"
+      # - "traefik.http.routers.dashboard.middlewares=traefik-auth"
+      - "traefik.http.middlewares.compress.compress=true"
+    ports:
+      - '80:80'
+      - '443:443'
+      - '8080:8080' # admin port protected by firewall
+    networks:
+      - anohou_traefik_net
+    volumes:
+      - 'edge_traefik_tls_persistance:/etc/traefik/acme'
+      - '/var/run/docker.sock:/var/run/docker.sock'
+
+networks:
+  anohou_traefik_net:
+    external: true
+
+# networks:
+#   web:
+#     driver: bridge
+#   default:
+#     driver: bridge
+
+volumes:
+  edge_traefik_tls_persistance:
